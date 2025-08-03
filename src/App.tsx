@@ -4,7 +4,8 @@ import PageLayout from './components/PageLayout.tsx';  // Vergewissere dich, das
 import { Route } from 'react-router-dom';  // Richtiges Import für Route
 import { Leaf } from 'lucide-react';
 import EmailVerification from "./pages/EmailVerificationPage.tsx";
-import SustainableShop from "./pages/ShopPage.tsx";  // Richtiges Import für Leaf
+import SustainableShop from "./pages/ShopPage.tsx";
+import Onboarding from "./pages/OnboardingPage.tsx";  // Richtiges Import für Leaf
 
 
 function App() {
@@ -22,6 +23,7 @@ function App() {
                 } />   {/* Home Seite */}
                 <Route path="/email-verification" element={<EmailVerification />} />
                 <Route path="/shop" element={<SustainableShop />} />
+                <Route path="/signin" element={<Onboarding />} />
             </Routes>
         </PageLayout>
     );
