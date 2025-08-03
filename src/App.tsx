@@ -3,7 +3,8 @@ import { Routes } from 'react-router-dom';
 import PageLayout from './components/PageLayout.tsx';  // Vergewissere dich, dass der Pfad stimmt!
 import { Route } from 'react-router-dom';  // Richtiges Import für Route
 import { Leaf } from 'lucide-react';
-import EmailVerification from "./pages/EmailVerificationPage.tsx";  // Richtiges Import für Leaf
+import EmailVerification from "./pages/EmailVerificationPage.tsx";
+import SustainableShop from "./pages/ShopPage.tsx";  // Richtiges Import für Leaf
 
 
 function App() {
@@ -20,6 +21,7 @@ function App() {
                     </div>
                 } />   {/* Home Seite */}
                 <Route path="/email-verification" element={<EmailVerification />} />
+                <Route path="/shop" element={<SustainableShop />} />
             </Routes>
         </PageLayout>
     );
