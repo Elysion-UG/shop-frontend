@@ -60,7 +60,7 @@ export default function ShopPreferencesSidebar({
         }))
     }
 
-    const [openAccordion, setOpenAccordion] = useState({ sustainability: true, category: true })
+    const [openAccordion, setOpenAccordion] = useState({ sustainability: false, category: true })
 
     const toggleAccordion = (key: "sustainability" | "category") => {
         setOpenAccordion((prev) => ({ ...prev, [key]: !prev[key] }))

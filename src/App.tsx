@@ -7,8 +7,7 @@ import EmailVerification from "./pages/EmailVerificationPage.tsx";
 import Onboarding from "./pages/OnboardingPage.tsx";
 import About from "./pages/AboutPage.tsx";
 import Contact from "./pages/ContactPage.tsx";
-import SustainableShopStage from "./pages/ShopPageStage.tsx";
-
+import SustainableShop from "./pages/ShopPage.tsx";
 
 function ProductPage() {
     return null;
@@ -28,7 +27,7 @@ function App() {
                     </div>
                 } />   {/* Home Seite */}
                 <Route path="/email-verification" element={<EmailVerification />} />
-                <Route path="/shop" element={<SustainableShopStage />} />
+                <Route path="/shop" element={<SustainableShop />} />
                 <Route path="/signin" element={<Onboarding />} />
                 <Route path="/about" element={<About />} />
                 <Route path="/contact" element={<Contact />} />

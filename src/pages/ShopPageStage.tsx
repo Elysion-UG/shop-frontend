@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useState, useMemo } from "react"
-import { Leaf, Heart, Recycle, ArrowUpDown, Star, ChevronDown } from "lucide-react"
+import { Leaf, Heart, Recycle, ArrowUpDown, Star } from "lucide-react"
 
 const products = [
     {
@@ -110,21 +110,12 @@ const sustainabilityFilters: Record<string, SustainabilityFilter>= {
     "plastic-free": { label: "Plastic-Free", icon: Recycle },
 }
 
-const categories = ["Clothing", "Personal Care", "Food & Beverages", "Sports & Fitness", "Accessories", "Electronics"]
-
-const importanceScale = [
-    { value: "1", label: "Not Important" },
-    { value: "2", label: "Somewhat Important" },
-    { value: "3", label: "Important" },
-    { value: "4", label: "Very Important" },
-]
-
 export default function SustainableShopStage() {
-    const [selectedFilters, setSelectedFilters] = useState<{ category: string[] }>({
+    const [selectedFilters] = useState<{ category: string[] }>({
         category: [],
     })
 
-    const [sustainabilityImportance, setSustainabilityImportance] = useState<Record<string, string>>(
+    const [sustainabilityImportance] = useState<Record<string, string>>(
         Object.keys(sustainabilityFilters).reduce(
             (acc, key) => ({
                 ...acc,
