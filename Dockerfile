@@ -1,29 +1,28 @@
-# Verwende ein Node.js-Image als Basis, um die Anwendung zu bauen
-FROM node:16-alpine AS build
+# Verwende ein offizielles Node-Image als Basis
+FROM node:22-alpine
 
-# Setze das Arbeitsverzeichnis im Container
+# Installiere Systemabhängigkeiten
+RUN apk add --no-cache bash
+
+# Arbeitsverzeichnis setzen
 WORKDIR /app
 
-# Kopiere die package.json und package-lock.json (oder yarn.lock) ins Arbeitsverzeichnis
+# Kopiere package.json und package-lock.json in das Arbeitsverzeichnis
 COPY package*.json ./
 
-# Installiere die Abhängigkeiten
+# Installiere alle Abhängigkeiten
 RUN npm install
 
-# Kopiere den gesamten Quellcode ins Arbeitsverzeichnis
+# Kopiere alle anderen Dateien
 COPY . .
 
 # Baue das Projekt
 RUN npm run build
 
-# Verwende ein Nginx-Image, um das gebaute Projekt auszuliefern
+# Verwende Nginx, um das gebaute Projekt bereitzustellen
 FROM nginx:alpine
+COPY --from=0 /app/dist /usr/share/nginx/html
 
-# Kopiere das Build-Output von der ersten Stage in das Nginx-Verzeichnis
-COPY --from=build /app/dist /usr/share/nginx/html
-
-# Exponiere Port 80
 EXPOSE 80
 
-# Starte Nginx im Vordergrund
 CMD ["nginx", "-g", "daemon off;"]
