@@ -1,7 +1,8 @@
 "use client"
 
 import React, { useState, useMemo } from "react"
-import { Leaf, Heart, Recycle, ArrowUpDown, Star, ChevronDown } from "lucide-react"
+import { Leaf, Heart, Recycle, ArrowUpDown, Star } from "lucide-react"
+import ShopPreferencesSidebar from "../components/ShopPreferencesSidebar.tsx";
 
 const products = [
     {
@@ -110,15 +111,6 @@ const sustainabilityFilters: { [key: string]: SustainabilityFilter } = {
     "plastic-free": { label: "Plastic-Free", icon: Recycle },
 }
 
-const categories = ["Clothing", "Personal Care", "Food & Beverages", "Sports & Fitness", "Accessories", "Electronics"]
-
-const importanceScale = [
-    { value: "1", label: "Not Important" },
-    { value: "2", label: "Somewhat Important" },
-    { value: "3", label: "Important" },
-    { value: "4", label: "Very Important" },
-]
-
 export default function SustainableShop() {
     const [selectedFilters, setSelectedFilters] = useState<{ category: string[] }>({
         category: [],
@@ -135,28 +127,7 @@ export default function SustainableShop() {
     )
 
     const [sortBy, setSortBy] = useState("relevance")
-    const [openAccordion, setOpenAccordion] = useState({ sustainability: true, category: true })
     const [isSortDropdownOpen, setIsSortDropdownOpen] = useState(false)
-
-    const handleCategoryFilterChange = (category: string) => {
-        setSelectedFilters((prev) => ({
-            ...prev,
-            category: prev.category.includes(category)
-                ? prev.category.filter((item) => item !== category)
-                : [...prev.category, category],
-        }))
-    }
-
-    const handleImportanceChange = (attribute: string, importance: string) => {
-        setSustainabilityImportance((prev) => ({
-            ...prev,
-            [attribute]: importance,
-        }))
-    }
-
-    const toggleAccordion = (key: "sustainability" | "category") => {
-        setOpenAccordion((prev) => ({ ...prev, [key]: !prev[key] }))
-    }
 
     const filteredProducts = useMemo(() => {
         return products
@@ -237,99 +208,12 @@ export default function SustainableShop() {
         <div className="container mx-auto px-4 py-8">
             <div className="grid md:grid-cols-[320px_1fr] gap-8">
                 {/* Filters Sidebar */}
-                <div className="space-y-6">
-                    <div className="bg-white rounded-lg p-6 shadow-sm border border-green-200">
-                        <h2 className="font-semibold text-green-800 mb-4">Preferences</h2>
-
-                        {/* Sustainability Importance Accordion */}
-                        <div className="border-b border-green-200">
-                            <button
-                                className="flex flex-1 items-center justify-between py-4 font-medium transition-all hover:underline text-green-700 hover:text-green-900 w-full"
-                                onClick={() => toggleAccordion("sustainability")}
-                                aria-expanded={openAccordion.sustainability}
-                                aria-controls="sustainability-content"
-                            >
-                                Sustainability Importance
-                                <ChevronDown
-                                    className={`h-4 w-4 shrink-0 transition-transform duration-200 ${openAccordion.sustainability ? "rotate-180" : ""}`}
-                                />
-                            </button>
-                            {openAccordion.sustainability && (
-                                <div id="sustainability-content" className="pb-4 pt-0 animate-accordion-down">
-                                    <div className="space-y-6">
-                                        <p className="text-sm text-green-600 mb-4">
-                                            Rate how important each sustainability aspect is to you:
-                                        </p>
-                                        {Object.entries(sustainabilityFilters).map(([key, filter]) => {
-                                            const Icon = filter.icon
-                                            return (
-                                                <div key={key} className="space-y-3">
-                                                    <div className="flex items-center gap-2">
-                                                        <Icon className="w-4 h-4 text-green-600" />
-                                                        <span className="text-sm font-medium text-green-800">{filter.label}</span>
-                                                    </div>
-                                                    <div className="grid grid-cols-1 gap-2">
-                                                        {importanceScale.map((scale) => (
-                                                            <div key={scale.value} className="flex items-center space-x-2">
-                                                                <input
-                                                                    type="radio"
-                                                                    value={scale.value}
-                                                                    id={`${key}-${scale.value}`}
-                                                                    name={`importance-${key}`}
-                                                                    checked={sustainabilityImportance[key] === scale.value}
-                                                                    onChange={() => handleImportanceChange(key, scale.value)}
-                                                                    className="aspect-square h-4 w-4 rounded-full border border-green-300 text-green-600 focus:ring-2 focus:ring-green-500"
-                                                                />
-                                                                <label
-                                                                    htmlFor={`${key}-${scale.value}`}
-                                                                    className="text-xs text-green-700 cursor-pointer"
-                                                                >
-                                                                    {scale.label}
-                                                                </label>
-                                                            </div>
-                                                        ))}
-                                                    </div>
-                                                </div>
-                                            )
-                                        })}
-                                    </div>
-                                </div>
-                            )}
-                        </div>
-
-                        {/* Category Accordion */}
-                        <div className="border-b border-green-200">
-                            <button
-                                className="flex flex-1 items-center justify-between py-4 font-medium transition-all hover:underline text-green-700 hover:text-green-900 w-full"
-                                onClick={() => toggleAccordion("category")}
-                                aria-expanded={openAccordion.category}
-                                aria-controls="category-content"
-                            >
-                                Category
-                                <ChevronDown
-                                    className={`h-4 w-4 shrink-0 transition-transform duration-200 ${openAccordion.category ? "rotate-180" : ""}`}
-                                />
-                            </button>
-                            {openAccordion.category && (
-                                <div id="category-content" className="pb-4 pt-0 animate-accordion-down">
-                                    <div className="space-y-3">
-                                        {categories.map((category) => (
-                                            <label key={category} className="flex items-center gap-3 font-normal cursor-pointer">
-                                                <input
-                                                    type="checkbox"
-                                                    checked={selectedFilters.category.includes(category)}
-                                                    onChange={() => handleCategoryFilterChange(category)}
-                                                    className="peer h-4 w-4 shrink-0 rounded-sm border border-green-300 ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 checked:bg-green-600 checked:text-white"
-                                                />
-                                                <span className="text-sm">{category}</span>
-                                            </label>
-                                        ))}
-                                    </div>
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                </div>
+                <ShopPreferencesSidebar
+                    selectedFilters={selectedFilters}
+                    setSelectedFilters={setSelectedFilters}
+                    sustainabilityImportance={sustainabilityImportance}
+                    setSustainabilityImportance={setSustainabilityImportance}
+                />
 
                 {/* Products Section */}
                 <div className="space-y-6">

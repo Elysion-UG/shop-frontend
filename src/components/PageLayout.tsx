@@ -44,7 +44,7 @@ export default function PageLayout({ children, title, logo }: PageLayoutProps) {
             </header>
 
             {/* Main Content Area */}
-            <main className="container mx-auto px-4 py-8">{children}</main>
+            <main className="container mx-auto">{children}</main>
         </div>
     )
 }
