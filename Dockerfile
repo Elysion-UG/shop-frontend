@@ -1,28 +1,30 @@
-# Verwende ein offizielles Node-Image als Basis
-FROM node:22-alpine
+# === STAGE 1: Build mit Node ===
+FROM node:22-alpine AS builder
 
-# Installiere Systemabhängigkeiten
-RUN apk add --no-cache bash
-
-# Arbeitsverzeichnis setzen
+# Setze Arbeitsverzeichnis
 WORKDIR /app
 
-# Kopiere package.json und package-lock.json in das Arbeitsverzeichnis
+# Installiere Abhängigkeiten
 COPY package*.json ./
-
-# Installiere alle Abhängigkeiten
 RUN npm install
 
-# Kopiere alle anderen Dateien
+# Kopiere restlichen Code
 COPY . .
 
 # Baue das Projekt
 RUN npm run build
 
-# Verwende Nginx, um das gebaute Projekt bereitzustellen
+# === STAGE 2: Serve mit Nginx ===
 FROM nginx:alpine
-COPY --from=0 /app/dist /usr/share/nginx/html
 
+# Eigene Nginx-Konfiguration einfügen (für React-Routing)
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+
+# Kopiere gebaute Dateien in den Nginx-Ordner
+COPY --from=builder /app/dist /usr/share/nginx/html
+
+# Exponiere Port
 EXPOSE 80
 
+# Starte Nginx im Vordergrund
 CMD ["nginx", "-g", "daemon off;"]
