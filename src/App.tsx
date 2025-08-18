@@ -16,13 +16,13 @@ function ProductPage() {
 function App() {
     return (
         <PageLayout
-            title="ELYSION"
+            title="ELYSION v1"
             logo={<Leaf className="w-8 h-8 text-green-600" />}  // Das Logo als React-Komponente
         >
             <Routes>
                 <Route path="/" element={
                     <div className="text-center">
-                        <h2 className="text-2xl font-bold text-green-800 mb-4">Page Content Area v1</h2>
+                        <h2 className="text-2xl font-bold text-green-800 mb-4">Page Content Area</h2>
                         <p className="text-green-600">This is where you can add any components you want!</p>
                     </div>
                 } />   {/* Home Seite */}
