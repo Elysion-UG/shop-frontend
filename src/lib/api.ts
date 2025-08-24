@@ -1,44 +1,61 @@
 // src/lib/api.ts
-
-/** Hilfsfunktion, um API-URLs zu erzeugen (mit /api-Präfix) */
-function apiUrl(path: string) {
-  const p = path.startsWith("/") ? path : `/${path}`;
-  return `/api${p}`; 
+function apiUrl(p: string) {
+  return `/api${p.startsWith("/") ? p : `/${p}`}`;
 }
 
-/** JWT-Login: POST /api/users/login
- *  Erwartete Response z. B.: { accessToken, refreshToken?, user? }
- */
-export async function loginJwt(data: { email: string; password: string }) {
-  const res = await fetch(apiUrl("/users/login"), {
+async function postJson(url: string, body: unknown) {
+  return fetch(url, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(data),
+    body: JSON.stringify(body),
   });
-
-  if (!res.ok) {
-    let msg = "";
-    try {
-      msg = await res.text();
-    } catch {
-      /* ignore */
-    }
-    throw new Error(msg || `Login fehlgeschlagen (${res.status})`);
-  }
-
-  return res.json() as Promise<{
-    accessToken: string;
-    refreshToken?: string;
-    user?: any;
-  }>;
 }
 
-/** Authenticated fetch */
-export async function authedFetch(path: string, init: RequestInit = {}) {
-  const token = localStorage.getItem("accessToken");
-  const headers = new Headers(init.headers || {});
-  if (token) headers.set("Authorization", `Bearer ${token}`);
+export async function loginJwt(data: { email: string; password: string }) {
+  // 1. Versuch: { email, password }
+  let res = await postJson(apiUrl("/users/login"), {
+    email: data.email,
+    password: data.password,
+  });
 
-  const url = apiUrl(path); // hängt /api davor
-  return fetch(url, { ...init, headers });
+  // 2. Versuch (häufige API-Variante): { username, password }
+  if (res.status === 401 || res.status === 400 || res.status === 415) {
+    res = await postJson(apiUrl("/users/login"), {
+      username: data.email,
+      password: data.password,
+    });
+  }
+
+  const rawText = await res.text().catch(() => "");
+  let json: any = {};
+  try { json = rawText ? JSON.parse(rawText) : {}; } catch {}
+
+  if (!res.ok) {
+    const msg =
+      json?.message ||
+      json?.error ||
+      rawText ||
+      `Login fehlgeschlagen (${res.status})`;
+    throw new Error(msg);
+  }
+
+  // Token-Felder flexibel akzeptieren (+ evtl. Authorization-Header)
+  const authHeader = res.headers.get("authorization") || res.headers.get("Authorization");
+  const tokenFromHeader = authHeader?.toLowerCase().startsWith("bearer ")
+    ? authHeader.slice(7).trim()
+    : null;
+
+  const accessToken =
+    json?.accessToken ??
+    json?.token ??
+    json?.jwt ??
+    json?.access_token ??
+    tokenFromHeader ??
+    null;
+
+  if (!accessToken) {
+    throw new Error("Unerwartete Serverantwort (kein Token).");
+  }
+
+  return { accessToken, user: json?.user };
 }
