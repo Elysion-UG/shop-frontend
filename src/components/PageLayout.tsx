@@ -2,8 +2,8 @@
 "use client";
 
 import type React from "react";
-import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useRef, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import NavLink from "./NavLink.tsx";
 
 type StoredUser = {
@@ -17,30 +17,59 @@ interface PageLayoutProps {
   children: React.ReactNode;
   title: string;
   logo: React.ReactNode;
-  actions?: React.ReactNode; // ✅ allow extra action elements
+  actions?: React.ReactNode; // optional extra actions rechts
 }
 
 export default function PageLayout({ children, title, logo, actions }: PageLayoutProps) {
   const navigate = useNavigate();
+  const location = useLocation();
+
   const [user, setUser] = useState<StoredUser | null>(null);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement | null>(null);
 
+  const loadUser = () => {
+    const raw = localStorage.getItem("user");
+    setUser(raw ? JSON.parse(raw) : null);
+  };
+
+  // 1) beim Mount laden
   useEffect(() => {
-    const load = () => {
-      const raw = localStorage.getItem("user");
-      setUser(raw ? JSON.parse(raw) : null);
-    };
-    load();
+    loadUser();
+  }, []);
 
+  // 2) bei Route-Wechsel (gleicher Tab) erneut lesen
+  useEffect(() => {
+    loadUser();
+  }, [location.key]);
+
+  // 3) zwischen Tabs synchron bleiben
+  useEffect(() => {
     const onStorage = (e: StorageEvent) => {
-      if (e.key === "user" || e.key === "accessToken") load();
+      if (e.key === "user" || e.key === "accessToken") loadUser();
     };
     window.addEventListener("storage", onStorage);
     return () => window.removeEventListener("storage", onStorage);
   }, []);
 
+  // 4) Dropdown außerhalb-Klick
+  useEffect(() => {
+    const onClick = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setMenuOpen(false);
+      }
+    };
+    if (menuOpen) document.addEventListener("mousedown", onClick);
+    return () => document.removeEventListener("mousedown", onClick);
+  }, [menuOpen]);
+
   const logout = () => {
     localStorage.removeItem("accessToken");
     localStorage.removeItem("user");
+    setMenuOpen(false);
+    setUser(null);
+    // Optional: Event triggern, falls andere Komponenten lauschen
+    window.dispatchEvent(new Event("storage"));
     navigate("/", { replace: true });
   };
 
@@ -50,6 +79,10 @@ export default function PageLayout({ children, title, logo, actions }: PageLayou
     { section: "about", label: "About" },
     { section: "contact", label: "Contact" },
   ];
+
+  const displayName = user?.firstName?.trim()
+    ? user.firstName
+    : (user?.email ?? "Konto");
 
   return (
     <div className="min-h-screen bg-green-50">
@@ -67,25 +100,59 @@ export default function PageLayout({ children, title, logo, actions }: PageLayou
                 <NavLink key={link.section} section={link.section} label={link.label} />
               ))}
 
-              {/* Rechts: Sign in ODER "Hallo, Name" + Logout */}
+              {/* Rechts: Sign in ODER Name + Dropdown */}
               {user ? (
-                <div className="flex items-center gap-3">
-                  <span className="text-green-800">
-                    Hallo, {user.firstName || user.email}
-                  </span>
+                <div className="relative" ref={menuRef}>
                   <button
-                    onClick={logout}
-                    className="inline-flex items-center rounded-md border border-green-300 px-3 py-1.5 text-sm text-green-800 hover:bg-green-50"
+                    type="button"
+                    onClick={() => setMenuOpen((v) => !v)}
+                    className="inline-flex items-center gap-2 rounded-md border border-green-300 px-3 py-1.5 text-sm text-green-800 hover:bg-green-50"
+                    aria-haspopup="menu"
+                    aria-expanded={menuOpen}
                   >
-                    Logout
+                    Hallo, {displayName}
+                    <svg
+                      className={`h-4 w-4 transition-transform ${menuOpen ? "rotate-180" : ""}`}
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.24 4.24a.75.75 0 01-1.06 0L5.21 8.29a.75.75 0 01.02-1.08z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
                   </button>
+
+                  {menuOpen && (
+                    <div
+                      role="menu"
+                      className="absolute right-0 mt-2 w-48 rounded-lg border border-green-200 bg-white shadow-lg overflow-hidden"
+                    >
+                      <button
+                        onClick={() => { setMenuOpen(false); navigate("/profile"); }}
+                        className="w-full text-left px-4 py-2 text-sm text-green-800 hover:bg-green-50"
+                        role="menuitem"
+                      >
+                        Profil
+                      </button>
+                      <button
+                        onClick={logout}
+                        className="w-full text-left px-4 py-2 text-sm text-red-700 hover:bg-red-50"
+                        role="menuitem"
+                      >
+                        Logout
+                      </button>
+                    </div>
+                  )}
                 </div>
               ) : (
-                <NavLink section="signin" label="Sign In" />
+                // Wichtig: direkt /login statt /signin
+                <NavLink section="login" label="Sign In" />
               )}
 
-              {/* optional extra actions */}
-              {actions && <div className="ml-4">{actions}</div>}
+              {/* optionale Zusatz-Actions rechts */}
+              {actions && <div className="ml-2">{actions}</div>}
             </nav>
           </div>
         </div>

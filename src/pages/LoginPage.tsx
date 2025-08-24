@@ -58,6 +58,9 @@ export default function LoginPage() {
 
       // Save token
       localStorage.setItem('accessToken', res.accessToken);
+      if (res.user) localStorage.setItem('user', JSON.stringify(res.user));
+
+      window.dispatchEvent(new Event('storage'));
 
       // Save user info
       if (res.user) {
