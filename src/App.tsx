@@ -8,6 +8,7 @@ import Onboarding from "./pages/OnboardingPage.tsx";
 import About from "./pages/AboutPage.tsx";
 import Contact from "./pages/ContactPage.tsx";
 import SustainableShop from "./pages/ShopPage.tsx";
+import LoginPage from "./pages/LoginPage.tsx";
 
 function ProductPage() {
     return null;
@@ -29,6 +30,7 @@ function App() {
                 <Route path="/email-verification" element={<EmailVerification />} />
                 <Route path="/shop" element={<SustainableShop />} />
                 <Route path="/signin" element={<Onboarding />} />
+                <Route path="/login" element={<LoginPage />} />
                 <Route path="/about" element={<About />} />
                 <Route path="/contact" element={<Contact />} />
                 <Route path="product/:id" element={<ProductPage />} />
