@@ -51,7 +51,6 @@ export default function LoginPage() {
     setIsSubmitting(true);
 
     try {
-      // ✅ nur EIN Argument, passend zur api.ts-Signatur
       const res = (await loginJwt({ email, password })) as LoginResponse;
 
       if (!res?.accessToken) {

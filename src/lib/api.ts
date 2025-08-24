@@ -1,30 +1,22 @@
 // src/lib/api.ts
 
-// Env-URL holen (kann undefined sein, wenn .env.local fehlt)
-const RAW = (import.meta as any)?.env?.VITE_API_URL as string | undefined;
-
-// Trailing Slashes entfernen + Fallback -> localhost:8080
-const API_URL =
-  (RAW && RAW.replace(/\/+$/, "")) ||
-  "http://localhost:8080";
-
-/** Hilfsfunktion zum sauberen Zusammenfügen von Base + Pfad */
-function joinUrl(base: string, path: string) {
-  const b = base.replace(/\/+$/, "");
-  const p = path.replace(/^\/+/, "");
-  return `${b}/${p}`;
+/** Hilfsfunktion, um API-URLs zu erzeugen (mit /api-Präfix) */
+function apiUrl(path: string) {
+  const p = path.startsWith("/") ? path : `/${path}`;
+  return `/api${p}`; 
 }
 
-/** JWT-Login: erwartet z. B. { accessToken, ... } als Response */
+/** JWT-Login: POST /api/users/login
+ *  Erwartete Response z. B.: { accessToken, refreshToken?, user? }
+ */
 export async function loginJwt(data: { email: string; password: string }) {
-  const res = await fetch(joinUrl(API_URL, "/api/auth/login"), {
+  const res = await fetch(apiUrl("/users/login"), {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(data),
   });
 
   if (!res.ok) {
-    // Fehlermeldung aus dem Backend, wenn vorhanden
     let msg = "";
     try {
       msg = await res.text();
@@ -41,10 +33,12 @@ export async function loginJwt(data: { email: string; password: string }) {
   }>;
 }
 
-/** Authenticated fetch (JWT im Authorization-Header mitschicken) */
+/** Authenticated fetch */
 export async function authedFetch(path: string, init: RequestInit = {}) {
   const token = localStorage.getItem("accessToken");
   const headers = new Headers(init.headers || {});
   if (token) headers.set("Authorization", `Bearer ${token}`);
-  return fetch(joinUrl(API_URL, path), { ...init, headers });
+
+  const url = apiUrl(path); // hängt /api davor
+  return fetch(url, { ...init, headers });
 }
