@@ -1,5 +1,5 @@
 // src/pages/LoginPage.tsx
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { Mail, Lock, ArrowRight, Eye, EyeOff } from "lucide-react";
 import { loginJwt } from "../lib/api"; // nutzt VITE_API_URL + POST /api/auth/login
@@ -18,7 +18,6 @@ export default function LoginPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const navigate = useNavigate();
-  const abortRef = useRef<AbortController | null>(null);
 
   // Wenn bereits eingeloggt → direkt weiter
   useEffect(() => {
@@ -51,17 +50,9 @@ export default function LoginPage() {
     setFormError(null);
     setIsSubmitting(true);
 
-    // Vorherige Requests abbrechen
-    if (abortRef.current) abortRef.current.abort();
-    const controller = new AbortController();
-    abortRef.current = controller;
-
     try {
-      // ✅ signal als 2. Argument übergeben (passend zu deiner api.ts)
-      const res = (await loginJwt(
-        { email, password },
-        { signal: controller.signal }
-      )) as LoginResponse;
+      // ✅ nur EIN Argument, passend zur api.ts-Signatur
+      const res = (await loginJwt({ email, password })) as LoginResponse;
 
       if (!res?.accessToken) {
         throw new Error("Unerwartete Serverantwort (kein accessToken).");
@@ -72,9 +63,7 @@ export default function LoginPage() {
 
       navigate("/shop", { replace: true });
     } catch (err: unknown) {
-      if (err instanceof DOMException && err.name === "AbortError") {
-        // ignorieren (neuer Submit hat alten abgebrochen)
-      } else if (isFetchError(err)) {
+      if (isFetchError(err)) {
         setFormError(mapHttpErrorToMessage(err.status));
       } else if (err instanceof Error) {
         setFormError(err.message || "Login fehlgeschlagen");
@@ -147,8 +136,6 @@ export default function LoginPage() {
                     }`}
                     placeholder="••••••••"
                     autoComplete="current-password"
-                    aria-invalid={!!fieldErrors.password}
-                    aria-describedby={fieldErrors.password ? "password-error" : undefined}
                     required
                   />
                   <button
@@ -197,11 +184,9 @@ export default function LoginPage() {
 }
 
 /** ---- kleine Helfer ---- */
-
 function isFetchError(err: unknown): err is { status?: number } {
   return typeof err === "object" && err !== null && "status" in err;
 }
-
 function mapHttpErrorToMessage(status?: number) {
   switch (status) {
     case 400:
