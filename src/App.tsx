@@ -17,7 +17,7 @@ function ProductPage() {
 function App() {
   return (
     <PageLayout
-      title="ELYSION Dimi stinkt"
+      title="ELYSION"
       logo={<Leaf className="w-8 h-8 text-green-600" />}
     >
       <Routes>
