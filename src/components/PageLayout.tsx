@@ -17,13 +17,13 @@ interface PageLayoutProps {
   children: React.ReactNode;
   title: string;
   logo: React.ReactNode;
+  actions?: React.ReactNode; // ✅ allow extra action elements
 }
 
-export default function PageLayout({ children, title, logo }: PageLayoutProps) {
+export default function PageLayout({ children, title, logo, actions }: PageLayoutProps) {
   const navigate = useNavigate();
   const [user, setUser] = useState<StoredUser | null>(null);
 
-  // User aus localStorage laden + über Tabs/Windows synchron halten
   useEffect(() => {
     const load = () => {
       const raw = localStorage.getItem("user");
@@ -44,7 +44,6 @@ export default function PageLayout({ children, title, logo }: PageLayoutProps) {
     navigate("/", { replace: true });
   };
 
-  // Statische Links links in der Navigation
   const links = [
     { section: "", label: "Home" },
     { section: "shop", label: "Shop" },
@@ -84,6 +83,9 @@ export default function PageLayout({ children, title, logo }: PageLayoutProps) {
               ) : (
                 <NavLink section="signin" label="Sign In" />
               )}
+
+              {/* optional extra actions */}
+              {actions && <div className="ml-4">{actions}</div>}
             </nav>
           </div>
         </div>
