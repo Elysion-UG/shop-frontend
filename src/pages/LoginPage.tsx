@@ -1,17 +1,17 @@
 // src/pages/LoginPage.tsx
-import { useEffect, useMemo, useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
-import { Mail, Lock, ArrowRight, Eye, EyeOff } from "lucide-react";
-import { loginJwt } from "../lib/api"; // nutzt VITE_API_URL + POST /api/auth/login
+import { useEffect, useMemo, useState } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
+import { Mail, Lock, ArrowRight, Eye, EyeOff } from 'lucide-react';
+import { loginJwt, getMe } from '../lib/api';
 
 type LoginResponse = {
   accessToken: string;
-  // ggf. weitere Felder: refreshToken, user, roles, ...
+  user?: { firstName?: string; lastName?: string; email?: string; [k: string]: any };
 };
 
 export default function LoginPage() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [showPw, setShowPw] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<{ email?: string; password?: string }>({});
@@ -21,25 +21,25 @@ export default function LoginPage() {
 
   // Wenn bereits eingeloggt → direkt weiter
   useEffect(() => {
-    const token = localStorage.getItem("accessToken");
-    if (token) navigate("/shop", { replace: true });
+    const token = localStorage.getItem('accessToken');
+    if (token) navigate('/shop', { replace: true });
   }, [navigate]);
 
   // einfache Client-Validierung
   const isEmailValid = useMemo(() => /\S+@\S+\.\S+/.test(email), [email]);
-  const isFormValid = isEmailValid && password.length >= 6;
+  const isFormValid = isEmailValid && password.length >= 8; 
 
   useEffect(() => {
     setFieldErrors((prev) => ({
       ...prev,
-      email: email && !isEmailValid ? "Bitte eine gültige E-Mail eingeben" : undefined,
+      email: email && !isEmailValid ? 'Bitte eine gültige E-Mail eingeben' : undefined,
     }));
   }, [email, isEmailValid]);
 
   useEffect(() => {
     setFieldErrors((prev) => ({
       ...prev,
-      password: password && password.length < 6 ? "Mindestens 6 Zeichen" : undefined,
+      password: password && password.length < 8 ? 'Mindestens 8 Zeichen' : undefined,
     }));
   }, [password]);
 
@@ -54,20 +54,30 @@ export default function LoginPage() {
       const res = (await loginJwt({ email, password })) as LoginResponse;
 
       if (!res?.accessToken) {
-        throw new Error("Unerwartete Serverantwort (kein accessToken).");
+        throw new Error('Unerwartete Serverantwort (kein accessToken).');
       }
 
-      // Token speichern (für Produktion: httpOnly Cookie serverseitig ist sicherer)
-      localStorage.setItem("accessToken", res.accessToken);
+      // Token speichern
+      localStorage.setItem('accessToken', res.accessToken);
 
-      navigate("/shop", { replace: true });
-    } catch (err: unknown) {
-      if (isFetchError(err)) {
-        setFormError(mapHttpErrorToMessage(err.status));
-      } else if (err instanceof Error) {
-        setFormError(err.message || "Login fehlgeschlagen");
+      // User speichern – entweder aus Login-Response, sonst /users/me abrufen
+      if (res.user) {
+        localStorage.setItem('user', JSON.stringify(res.user));
       } else {
-        setFormError("Login fehlgeschlagen");
+        try {
+          const me = await getMe();
+          localStorage.setItem('user', JSON.stringify(me));
+        } catch {
+          /* not fatal */
+        }
+      }
+
+      navigate('/shop', { replace: true });
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        setFormError(err.message || 'Login fehlgeschlagen');
+      } else {
+        setFormError('Login fehlgeschlagen');
       }
     } finally {
       setIsSubmitting(false);
@@ -103,12 +113,12 @@ export default function LoginPage() {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     className={`h-10 w-full rounded-md border bg-white px-3 py-2 pl-10 text-sm placeholder:text-gray-400 outline-none focus:border-green-500 focus-visible:ring-2 focus-visible:ring-green-500/30 ${
-                      fieldErrors.email ? "border-red-300" : "border-green-300"
+                      fieldErrors.email ? 'border-red-300' : 'border-green-300'
                     }`}
                     placeholder="du@beispiel.de"
                     autoComplete="email"
                     aria-invalid={!!fieldErrors.email}
-                    aria-describedby={fieldErrors.email ? "email-error" : undefined}
+                    aria-describedby={fieldErrors.email ? 'email-error' : undefined}
                     required
                   />
                 </div>
@@ -127,11 +137,11 @@ export default function LoginPage() {
                   <Lock className="pointer-events-none absolute left-3 top-3 h-4 w-4 text-green-500" />
                   <input
                     id="password"
-                    type={showPw ? "text" : "password"}
+                    type={showPw ? 'text' : 'password'}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     className={`h-10 w-full rounded-md border bg-white px-3 py-2 pl-10 pr-10 text-sm placeholder:text-gray-400 outline-none focus:border-green-500 focus-visible:ring-2 focus-visible:ring-green-500/30 ${
-                      fieldErrors.password ? "border-red-300" : "border-green-300"
+                      fieldErrors.password ? 'border-red-300' : 'border-green-300'
                     }`}
                     placeholder="••••••••"
                     autoComplete="current-password"
@@ -140,7 +150,7 @@ export default function LoginPage() {
                   <button
                     type="button"
                     onClick={() => setShowPw((s) => !s)}
-                    aria-label={showPw ? "Passwort verbergen" : "Passwort anzeigen"}
+                    aria-label={showPw ? 'Passwort verbergen' : 'Passwort anzeigen'}
                     className="absolute right-2 top-2 inline-flex h-6 w-6 items-center justify-center rounded hover:bg-green-50"
                   >
                     {showPw ? <EyeOff className="h-4 w-4 text-green-600" /> : <Eye className="h-4 w-4 text-green-600" />}
@@ -159,7 +169,7 @@ export default function LoginPage() {
                 className="mt-1 inline-flex h-11 w-full items-center justify-center rounded-md bg-green-600 px-4 text-sm font-medium text-white transition-colors hover:bg-green-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-600 focus-visible:ring-offset-2 disabled:opacity-50"
               >
                 {isSubmitting ? (
-                  "Wird angemeldet…"
+                  'Wird angemeldet…'
                 ) : (
                   <span className="inline-flex items-center">
                     Einloggen
@@ -170,7 +180,7 @@ export default function LoginPage() {
             </form>
 
             <div className="mt-6 text-center text-sm text-green-700">
-              Neu hier?{" "}
+              Neu hier?{' '}
               <Link to="/onboarding" className="font-medium text-green-800 underline">
                 Konto erstellen
               </Link>
@@ -180,26 +190,4 @@ export default function LoginPage() {
       </div>
     </div>
   );
-}
-
-/** ---- kleine Helfer ---- */
-function isFetchError(err: unknown): err is { status?: number } {
-  return typeof err === "object" && err !== null && "status" in err;
-}
-function mapHttpErrorToMessage(status?: number) {
-  switch (status) {
-    case 400:
-    case 422:
-      return "Eingaben prüfen – ungültige Anmeldedaten.";
-    case 401:
-      return "E-Mail oder Passwort falsch.";
-    case 403:
-      return "Zugriff verweigert.";
-    case 500:
-      return "Serverfehler. Bitte später erneut versuchen.";
-    case 0:
-      return "Keine Verbindung zum Server.";
-    default:
-      return "Login fehlgeschlagen.";
-  }
 }

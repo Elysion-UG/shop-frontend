@@ -1,5 +1,6 @@
-// App.tsx
-import { Routes, Route, Navigate } from 'react-router-dom';
+// src/App.tsx
+import { Routes, Route, Navigate, Link, useNavigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
 import PageLayout from './components/PageLayout.tsx';
 import { Leaf } from 'lucide-react';
 
@@ -10,15 +11,64 @@ import Contact from "./pages/ContactPage.tsx";
 import SustainableShop from "./pages/ShopPage.tsx";
 import LoginPage from "./pages/LoginPage.tsx";
 
+type StoredUser = { firstName?: string; lastName?: string; email?: string };
+
 function ProductPage() {
   return null;
 }
 
-function App() {
+export default function App() {
+  const [user, setUser] = useState<StoredUser | null>(null);
+  const navigate = useNavigate();
+
+  // user aus localStorage laden + über Tabs synchron halten
+  useEffect(() => {
+    const load = () => {
+      const raw = localStorage.getItem('user');
+      setUser(raw ? JSON.parse(raw) : null);
+    };
+    load();
+
+    const onStorage = (e: StorageEvent) => {
+      if (e.key === 'user' || e.key === 'accessToken') load();
+    };
+    window.addEventListener('storage', onStorage);
+    return () => window.removeEventListener('storage', onStorage);
+  }, []);
+
+  const logout = () => {
+    localStorage.removeItem('accessToken');
+    localStorage.removeItem('user');
+    navigate('/', { replace: true });
+  };
+
+  // Was rechts im Header steht
+  const headerActions = user ? (
+    <div className="flex items-center gap-3">
+      <span className="text-green-800">
+        Hallo, {user.firstName || user.email}
+      </span>
+      <button
+        onClick={logout}
+        className="inline-flex items-center rounded-md border border-green-300 px-3 py-1.5 text-sm text-green-800 hover:bg-green-50"
+      >
+        Logout
+      </button>
+    </div>
+  ) : (
+    <Link
+      to="/login"
+      className="inline-flex items-center rounded-md bg-green-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-green-700"
+    >
+      Sign in
+    </Link>
+  );
+
   return (
     <PageLayout
       title="ELYSION"
       logo={<Leaf className="w-8 h-8 text-green-600" />}
+      actions={headerActions}   // <- hier rein in den Header
     >
       <Routes>
         <Route
@@ -37,7 +87,6 @@ function App() {
         {/* Login & Onboarding */}
         <Route path="/login" element={<LoginPage />} />
         <Route path="/onboarding" element={<Onboarding />} />
-        {/* /signin alias → redirect auf /login */}
         <Route path="/signin" element={<Navigate to="/login" replace />} />
 
         <Route path="/about" element={<About />} />
@@ -47,5 +96,3 @@ function App() {
     </PageLayout>
   );
 }
-
-export default App;
