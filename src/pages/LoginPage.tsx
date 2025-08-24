@@ -57,7 +57,11 @@ export default function LoginPage() {
     abortRef.current = controller;
 
     try {
-      const res = (await loginJwt({ email, password, signal: controller.signal })) as LoginResponse;
+      // ✅ signal als 2. Argument übergeben (passend zu deiner api.ts)
+      const res = (await loginJwt(
+        { email, password },
+        { signal: controller.signal }
+      )) as LoginResponse;
 
       if (!res?.accessToken) {
         throw new Error("Unerwartete Serverantwort (kein accessToken).");
@@ -68,11 +72,9 @@ export default function LoginPage() {
 
       navigate("/shop", { replace: true });
     } catch (err: unknown) {
-      // Fehlerursachen differenzieren
       if (err instanceof DOMException && err.name === "AbortError") {
         // ignorieren (neuer Submit hat alten abgebrochen)
       } else if (isFetchError(err)) {
-        // Falls dein loginJwt HTTP-Fehler wirft
         setFormError(mapHttpErrorToMessage(err.status));
       } else if (err instanceof Error) {
         setFormError(err.message || "Login fehlgeschlagen");
