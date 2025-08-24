@@ -1,17 +1,15 @@
-// =============================
-// File: app/login/page.tsx
-// =============================
-"use client";
-
-import Link from "next/link";
+// src/pages/LoginPage.tsx
 import { useState } from "react";
+import { useNavigate, Link } from "react-router-dom";
 import { Mail, Lock, ArrowRight } from "lucide-react";
+import { loginJwt } from "../lib/api"; // nutzt VITE_API_URL + POST /api/auth/login
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showError, setShowError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const navigate = useNavigate();
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -19,14 +17,17 @@ export default function LoginPage() {
     setIsSubmitting(true);
 
     try {
-      // TODO: Ersetze diesen Block mit deiner echten Login-Logik
-      // z. B. NextAuth: await signIn("credentials", { email, password, callbackUrl: "/" })
-      // oder eigene API-Route / Server Action
       if (!email || !password) throw new Error("Bitte E-Mail und Passwort eingeben");
 
-      console.log("Login attempt", { email });
-      // Simulierter Erfolg:
-      window.location.href = "/"; // weiter zur Start-/Shop-Seite
+      // ---- JWT-Login gegen dein Backend ----
+      // Erwartete Response: { accessToken: string, ... }
+      const res = await loginJwt({ email, password });
+
+      // Token speichern (einfacher Start; für Produktion ggf. httpOnly-Cookies auf Serverseite nutzen)
+      localStorage.setItem("accessToken", res.accessToken);
+
+      // Erfolg → weiter zum Shop (oder wohin du willst)
+      navigate("/shop", { replace: true });
     } catch (err: any) {
       setShowError(err?.message ?? "Login fehlgeschlagen");
     } finally {
@@ -87,11 +88,6 @@ export default function LoginPage() {
                     required
                   />
                 </div>
-                <div className="mt-2 text-right text-sm">
-                  <Link href="/forgot-password" className="text-green-700 underline">
-                    Passwort vergessen?
-                  </Link>
-                </div>
               </div>
 
               <button
@@ -99,7 +95,9 @@ export default function LoginPage() {
                 disabled={isSubmitting}
                 className="mt-1 inline-flex h-11 w-full items-center justify-center rounded-md bg-green-600 px-4 text-sm font-medium text-white transition-colors hover:bg-green-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-600 focus-visible:ring-offset-2 disabled:opacity-50"
               >
-                {isSubmitting ? "Wird angemeldet…" : (
+                {isSubmitting ? (
+                  "Wird angemeldet…"
+                ) : (
                   <span className="inline-flex items-center">
                     Einloggen
                     <ArrowRight className="ml-2 h-4 w-4" />
@@ -108,25 +106,22 @@ export default function LoginPage() {
               </button>
             </form>
 
-            {/* Divider */}
-            <div className="my-6 flex items-center gap-4 text-xs text-green-700">
+            {/* Optionaler Divider / Social Login Platzhalter */}
+            {/* <div className="my-6 flex items-center gap-4 text-xs text-green-700">
               <div className="h-px flex-1 bg-green-200" />
               oder
               <div className="h-px flex-1 bg-green-200" />
             </div>
-
-            {/* Social/alternative sign-in placeholder */}
             <button
               type="button"
-              onClick={() => console.log("Sign in with provider")}
               className="inline-flex h-10 w-full items-center justify-center rounded-md border border-green-300 bg-white px-4 text-sm font-medium text-green-800 shadow-sm transition-colors hover:bg-green-50"
             >
               Mit Provider anmelden
-            </button>
+            </button> */}
 
             <div className="mt-6 text-center text-sm text-green-700">
-              Neu hier? {" "}
-              <Link href="/onboarding" className="font-medium text-green-800 underline">
+              Neu hier?{" "}
+              <Link to="/onboarding" className="font-medium text-green-800 underline">
                 Konto erstellen
               </Link>
             </div>
@@ -135,12 +130,4 @@ export default function LoginPage() {
       </div>
     </div>
   );
-}
-
-// =============================
-// File: app/signin/page.tsx (Alias → Redirect)
-// =============================
-import { redirect } from "next/navigation";
-export default function SigninRedirect() {
-  redirect("/login");
 }

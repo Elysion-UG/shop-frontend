@@ -1,8 +1,8 @@
 // App.tsx
-import { Routes } from 'react-router-dom';
-import PageLayout from './components/PageLayout.tsx';  // Vergewissere dich, dass der Pfad stimmt!
-import { Route } from 'react-router-dom';  // Richtiges Import für Route
+import { Routes, Route, Navigate } from 'react-router-dom';
+import PageLayout from './components/PageLayout.tsx';
 import { Leaf } from 'lucide-react';
+
 import EmailVerification from "./pages/EmailVerificationPage.tsx";
 import Onboarding from "./pages/OnboardingPage.tsx";
 import About from "./pages/AboutPage.tsx";
@@ -11,32 +11,41 @@ import SustainableShop from "./pages/ShopPage.tsx";
 import LoginPage from "./pages/LoginPage.tsx";
 
 function ProductPage() {
-    return null;
+  return null;
 }
 
 function App() {
-    return (
-        <PageLayout
-            title="ELYSION Dimi stinkt"
-            logo={<Leaf className="w-8 h-8 text-green-600" />}  // Das Logo als React-Komponente
-        >
-            <Routes>
-                <Route path="/" element={
-                    <div className="text-center">
-                        <h2 className="text-2xl font-bold text-green-800 mb-4">Page Content Area</h2>
-                        <p className="text-green-600">This is where you can add any components you want!</p>
-                    </div>
-                } />   {/* Home Seite */}
-                <Route path="/email-verification" element={<EmailVerification />} />
-                <Route path="/shop" element={<SustainableShop />} />
-                <Route path="/signin" element={<Onboarding />} />
-                <Route path="/login" element={<LoginPage />} />
-                <Route path="/about" element={<About />} />
-                <Route path="/contact" element={<Contact />} />
-                <Route path="product/:id" element={<ProductPage />} />
-            </Routes>
-        </PageLayout>
-    );
+  return (
+    <PageLayout
+      title="ELYSION Dimi stinkt"
+      logo={<Leaf className="w-8 h-8 text-green-600" />}
+    >
+      <Routes>
+        <Route
+          path="/"
+          element={
+            <div className="text-center">
+              <h2 className="text-2xl font-bold text-green-800 mb-4">Page Content Area</h2>
+              <p className="text-green-600">This is where you can add any components you want!</p>
+            </div>
+          }
+        />
+
+        <Route path="/email-verification" element={<EmailVerification />} />
+        <Route path="/shop" element={<SustainableShop />} />
+
+        {/* Login & Onboarding */}
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/onboarding" element={<Onboarding />} />
+        {/* /signin alias → redirect auf /login */}
+        <Route path="/signin" element={<Navigate to="/login" replace />} />
+
+        <Route path="/about" element={<About />} />
+        <Route path="/contact" element={<Contact />} />
+        <Route path="product/:id" element={<ProductPage />} />
+      </Routes>
+    </PageLayout>
+  );
 }
 
 export default App;
