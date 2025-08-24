@@ -19,15 +19,14 @@ export default function LoginPage() {
 
   const navigate = useNavigate();
 
-  // Wenn bereits eingeloggt → direkt weiter
+  // Redirect if already logged in
   useEffect(() => {
     const token = localStorage.getItem('accessToken');
     if (token) navigate('/shop', { replace: true });
   }, [navigate]);
 
-  // einfache Client-Validierung
   const isEmailValid = useMemo(() => /\S+@\S+\.\S+/.test(email), [email]);
-  const isFormValid = isEmailValid && password.length >= 8; 
+  const isFormValid = isEmailValid && password.length >= 8;
 
   useEffect(() => {
     setFieldErrors((prev) => ({
@@ -57,10 +56,10 @@ export default function LoginPage() {
         throw new Error('Unerwartete Serverantwort (kein accessToken).');
       }
 
-      // Token speichern
+      // Save token
       localStorage.setItem('accessToken', res.accessToken);
 
-      // User speichern – entweder aus Login-Response, sonst /users/me abrufen
+      // Save user info
       if (res.user) {
         localStorage.setItem('user', JSON.stringify(res.user));
       } else {
@@ -68,7 +67,7 @@ export default function LoginPage() {
           const me = await getMe();
           localStorage.setItem('user', JSON.stringify(me));
         } catch {
-          /* not fatal */
+          /* ignore */
         }
       }
 
@@ -95,12 +94,16 @@ export default function LoginPage() {
 
           <div className="p-6 pt-0">
             {formError && (
-              <div className="mb-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700" role="alert">
+              <div
+                className="mb-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700"
+                role="alert"
+              >
                 {formError}
               </div>
             )}
 
             <form onSubmit={handleSubmit} className="space-y-5" noValidate>
+              {/* Email */}
               <div>
                 <label htmlFor="email" className="text-sm font-medium text-green-800">
                   E-Mail-Adresse
@@ -129,6 +132,7 @@ export default function LoginPage() {
                 )}
               </div>
 
+              {/* Password */}
               <div>
                 <label htmlFor="password" className="text-sm font-medium text-green-800">
                   Passwort
@@ -153,7 +157,11 @@ export default function LoginPage() {
                     aria-label={showPw ? 'Passwort verbergen' : 'Passwort anzeigen'}
                     className="absolute right-2 top-2 inline-flex h-6 w-6 items-center justify-center rounded hover:bg-green-50"
                   >
-                    {showPw ? <EyeOff className="h-4 w-4 text-green-600" /> : <Eye className="h-4 w-4 text-green-600" />}
+                    {showPw ? (
+                      <EyeOff className="h-4 w-4 text-green-600" />
+                    ) : (
+                      <Eye className="h-4 w-4 text-green-600" />
+                    )}
                   </button>
                 </div>
                 {fieldErrors.password && (
@@ -163,6 +171,7 @@ export default function LoginPage() {
                 )}
               </div>
 
+              {/* Submit */}
               <button
                 type="submit"
                 disabled={!isFormValid || isSubmitting}
@@ -179,6 +188,7 @@ export default function LoginPage() {
               </button>
             </form>
 
+            {/* Link to onboarding */}
             <div className="mt-6 text-center text-sm text-green-700">
               Neu hier?{' '}
               <Link to="/onboarding" className="font-medium text-green-800 underline">
