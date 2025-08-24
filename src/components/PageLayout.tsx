@@ -17,7 +17,7 @@ interface PageLayoutProps {
   children: React.ReactNode;
   title: string;
   logo: React.ReactNode;
-  actions?: React.ReactNode; // optional extra actions rechts
+  actions?: React.ReactNode; // optional: extra-Buttons rechts im Header
 }
 
 export default function PageLayout({ children, title, logo, actions }: PageLayoutProps) {
@@ -33,26 +33,28 @@ export default function PageLayout({ children, title, logo, actions }: PageLayou
     setUser(raw ? JSON.parse(raw) : null);
   };
 
-  // 1) beim Mount laden
+  // 1) Beim Mount laden
   useEffect(() => {
     loadUser();
   }, []);
 
-  // 2) bei Route-Wechsel (gleicher Tab) erneut lesen
+  // 2) Bei Route-Wechsel neu lesen (gleicher Tab)
   useEffect(() => {
     loadUser();
   }, [location.key]);
 
-  // 3) zwischen Tabs synchron bleiben
+  // 3) Auf Änderungen zwischen Tabs + Custom-Event im selben Tab reagieren
   useEffect(() => {
-    const onStorage = (e: StorageEvent) => {
-      if (e.key === "user" || e.key === "accessToken") loadUser();
+    const onChange = () => loadUser();
+    window.addEventListener("storage", onChange);
+    window.addEventListener("userChanged", onChange);
+    return () => {
+      window.removeEventListener("storage", onChange);
+      window.removeEventListener("userChanged", onChange);
     };
-    window.addEventListener("storage", onStorage);
-    return () => window.removeEventListener("storage", onStorage);
   }, []);
 
-  // 4) Dropdown außerhalb-Klick
+  // 4) Dropdown bei Klick außerhalb schließen
   useEffect(() => {
     const onClick = (e: MouseEvent) => {
       if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
@@ -68,8 +70,8 @@ export default function PageLayout({ children, title, logo, actions }: PageLayou
     localStorage.removeItem("user");
     setMenuOpen(false);
     setUser(null);
-    // Optional: Event triggern, falls andere Komponenten lauschen
-    window.dispatchEvent(new Event("storage"));
+    // sofortiges Update auch im gleichen Tab auslösen
+    window.dispatchEvent(new Event("userChanged"));
     navigate("/", { replace: true });
   };
 
@@ -100,7 +102,7 @@ export default function PageLayout({ children, title, logo, actions }: PageLayou
                 <NavLink key={link.section} section={link.section} label={link.label} />
               ))}
 
-              {/* Rechts: Sign in ODER Name + Dropdown */}
+              {/* Rechts: Sign In ODER Name + Dropdown */}
               {user ? (
                 <div className="relative" ref={menuRef}>
                   <button
@@ -127,7 +129,7 @@ export default function PageLayout({ children, title, logo, actions }: PageLayou
                   {menuOpen && (
                     <div
                       role="menu"
-                      className="absolute right-0 mt-2 w-48 rounded-lg border border-green-200 bg-white shadow-lg overflow-hidden"
+                      className="absolute right-0 mt-2 w-48 rounded-lg border border-green-200 bg-white shadow-lg overflow-hidden z-50"
                     >
                       <button
                         onClick={() => { setMenuOpen(false); navigate("/profile"); }}
@@ -147,7 +149,7 @@ export default function PageLayout({ children, title, logo, actions }: PageLayou
                   )}
                 </div>
               ) : (
-                // Wichtig: direkt /login statt /signin
+                // Direkt /login statt /signin
                 <NavLink section="login" label="Sign In" />
               )}
 

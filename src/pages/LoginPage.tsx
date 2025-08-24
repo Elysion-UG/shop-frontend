@@ -60,7 +60,8 @@ export default function LoginPage() {
       localStorage.setItem('accessToken', res.accessToken);
       if (res.user) localStorage.setItem('user', JSON.stringify(res.user));
 
-      window.dispatchEvent(new Event('storage'));
+      // manuell Event feuern, damit PageLayout reagiert
+      window.dispatchEvent(new Event("userChanged"));
 
       // Save user info
       if (res.user) {
